@@ -1,0 +1,321 @@
+{
+  "updatedAt": "2026-11-12T15:35:00+09:00",
+  "settings": {
+    "fiscalEndMonth": 3,
+    "selectedFiscalYear": 2026,
+    "selectedMonth": "ALL",
+    "customerFilter": "ALL",
+    "statusFilter": "ALL",
+    "searchQuery": "",
+    "inputModeGross": false,
+    "groupSameMonthCustomer": true,
+    "activeTab": "ledger",
+    "matrixMetric": "all_ledger",
+    "periodGroup": "monthly_customer",
+    "showCarryOnInvoice": true
+  },
+  "issuer": {
+    "name": "株式会社サンプルクリエイト",
+    "regNo": "T9010001099999",
+    "address": "〒100-0001 東京都千代田区千代田1-1-1 サンプルビル5F",
+    "contact": "TEL: 03-1234-5678 / Mail: billing@sample-create.co.jp",
+    "bank": "みずほ銀行 東京営業部 普通 1234567 カ）サンプルクリエイト",
+    "note": "恐れ入りますが、お振込手数料は貴社にてご負担くださいますようお願い申し上げます。"
+  },
+  "products": [
+    {
+      "id": "PRD-01",
+      "code": "P-101",
+      "name": "クラウドシステム保守・ライセンス（標準10%）",
+      "taxRate": 10,
+      "unitPrice": 250000,
+      "unit": "式",
+      "note": "標準税率10%対象（毎月定期請求）"
+    },
+    {
+      "id": "PRD-02",
+      "code": "P-102",
+      "name": "業務システム開発・改修作業（標準10%）",
+      "taxRate": 10,
+      "unitPrice": 100000,
+      "unit": "人日",
+      "note": "標準税率10%対象（IT・制作役務）"
+    },
+    {
+      "id": "PRD-03",
+      "code": "P-103",
+      "name": "配送・梱包資材費（標準10%）",
+      "taxRate": 10,
+      "unitPrice": 10000,
+      "unit": "式",
+      "note": "標準税率10%対象（送料・資材）"
+    },
+    {
+      "id": "PRD-04",
+      "code": "P-801",
+      "name": "軽減対象 季節ギフト食品セット（軽減8%）",
+      "taxRate": 8,
+      "unitPrice": 3000,
+      "unit": "箱",
+      "note": "軽減税率8%対象（飲食料品の譲渡 ※印対象）"
+    },
+    {
+      "id": "PRD-05",
+      "code": "P-802",
+      "name": "軽減対象 業務用オーガニック食材卸（軽減8%）",
+      "taxRate": 8,
+      "unitPrice": 5000,
+      "unit": "kg",
+      "note": "軽減税率8%対象（飲食料品の譲渡 ※印対象）"
+    },
+    {
+      "id": "PRD-06",
+      "code": "P-001",
+      "name": "収入印紙・行政手数料立替（非課税/対象外）",
+      "taxRate": 0,
+      "unitPrice": 10000,
+      "unit": "件",
+      "note": "消費税非課税・不課税（立替金など）"
+    }
+  ],
+  "customers": [
+    {
+      "id": "CUST-001",
+      "code": "C001",
+      "name": "株式会社アルファ商事",
+      "address": "〒105-0001 東京都港区虎ノ門2-2-2 営業本部 御中",
+      "invoiceRegNo": "",
+      "openingBalance": 165000,
+      "paymentTerms": "月末締・翌月末払",
+      "note": "同月に複数案件・納品が発生する主力取引先"
+    },
+    {
+      "id": "CUST-002",
+      "code": "C002",
+      "name": "ベータフーズ株式会社",
+      "address": "〒530-0001 大阪府大阪市北区梅田3-3-3 仕入購買部 御中",
+      "invoiceRegNo": "",
+      "openingBalance": 0,
+      "paymentTerms": "月末締・翌月末払",
+      "note": "軽減税率（8%）対象品目と10%資材の混在取引先（月複数回納品）"
+    },
+    {
+      "id": "CUST-003",
+      "code": "C003",
+      "name": "ガンマシステムズ合同会社",
+      "address": "〒450-0002 愛知県名古屋市中村区名駅4-4-4",
+      "invoiceRegNo": "T3030003000003",
+      "openingBalance": 330000,
+      "paymentTerms": "20日締・翌月末払",
+      "note": "システム開発・分割検収あり"
+    },
+    {
+      "id": "CUST-004",
+      "code": "C004",
+      "name": "デルタデザイン事務所（個人事業・免税）",
+      "address": "〒810-0001 福岡県福岡市中央区天神1-1-1",
+      "invoiceRegNo": "",
+      "openingBalance": 0,
+      "paymentTerms": "月末締・翌々月10日払",
+      "note": "インボイス番号なし顧客でも請求書出力・集計完全対応"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "INV-1001",
+      "invoiceDate": "2026-02-28",
+      "invoiceNo": "INV-2602-01",
+      "customerId": "CUST-001",
+      "itemTitle": "2月度 クラウドシステム保守・ライセンス",
+      "net10": 200000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 220000,
+      "paidDate": "2026-03-31",
+      "note": "前期分・入金済",
+      "items": [
+        { "name": "2月度 クラウドシステム保守・ライセンス", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 200000 }
+      ]
+    },
+    {
+      "id": "INV-1002",
+      "invoiceDate": "2026-03-31",
+      "invoiceNo": "INV-2603-01",
+      "customerId": "CUST-001",
+      "itemTitle": "3月度 サーバー増設作業一式",
+      "net10": 300000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 165000,
+      "paidDate": "2026-03-31",
+      "note": "期末請求（翌期4月入金予定）",
+      "items": [
+        { "name": "業務システム開発・改修作業（サーバー増設）", "taxRate": 10, "qty": 3, "unit": "人日", "unitPrice": 100000 }
+      ]
+    },
+    {
+      "id": "INV-2001A",
+      "invoiceDate": "2026-04-10",
+      "invoiceNo": "INV-2604-01",
+      "customerId": "CUST-001",
+      "itemTitle": "4月前半 追加端末セットアップ作業",
+      "net10": 120000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 330000,
+      "paidDate": "2026-04-30",
+      "note": "同月1件目（3月繰越分入金消込）",
+      "items": [
+        { "name": "追加端末セットアップ作業（標準10%）", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 120000 }
+      ]
+    },
+    {
+      "id": "INV-2001B",
+      "invoiceDate": "2026-04-30",
+      "invoiceNo": "INV-2604-02",
+      "customerId": "CUST-001",
+      "itemTitle": "4月度 クラウドシステム保守・ライセンス",
+      "net10": 250000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 0,
+      "paidDate": "",
+      "note": "同月2件目（月末定期保守）",
+      "items": [
+        { "name": "クラウドシステム保守・ライセンス（標準10%）", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 250000 }
+      ]
+    },
+    {
+      "id": "INV-2002A",
+      "invoiceDate": "2026-04-15",
+      "invoiceNo": "INV-2604-03",
+      "customerId": "CUST-002",
+      "itemTitle": "軽減対象 季節ギフト食品セット（軽減8%） 第1回納品",
+      "net10": 20000,
+      "net8": 90000,
+      "exempt0": 0,
+      "paidAmount": 0,
+      "paidDate": "",
+      "note": "4月第1回納品（8%食品30箱＋10%送料）",
+      "items": [
+        { "name": "軽減対象 季節ギフト食品セット（軽減8%）", "taxRate": 8, "qty": 30, "unit": "箱", "unitPrice": 3000 },
+        { "name": "配送・梱包資材費（標準10%）", "taxRate": 10, "qty": 2, "unit": "式", "unitPrice": 10000 }
+      ]
+    },
+    {
+      "id": "INV-2002B",
+      "invoiceDate": "2026-04-28",
+      "invoiceNo": "INV-2604-04",
+      "customerId": "CUST-002",
+      "itemTitle": "軽減対象 季節ギフト食品セット（軽減8%） 第2回納品",
+      "net10": 30000,
+      "net8": 90000,
+      "exempt0": 0,
+      "paidAmount": 249400,
+      "paidDate": "2026-05-29",
+      "note": "4月第2回納品（同月2件分を合算入金済）",
+      "items": [
+        { "name": "軽減対象 季節ギフト食品セット（軽減8%）", "taxRate": 8, "qty": 30, "unit": "箱", "unitPrice": 3000 },
+        { "name": "配送・梱包資材費（標準10%）", "taxRate": 10, "qty": 3, "unit": "式", "unitPrice": 10000 }
+      ]
+    },
+    {
+      "id": "INV-2003",
+      "invoiceDate": "2026-05-31",
+      "invoiceNo": "INV-2605-01",
+      "customerId": "CUST-001",
+      "itemTitle": "5月度 定期保守・追加ライセンス",
+      "net10": 250000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 407000,
+      "paidDate": "2026-05-31",
+      "note": "4月合算請求分(2件計)の入金",
+      "items": [
+        { "name": "クラウドシステム保守・ライセンス（標準10%）", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 250000 }
+      ]
+    },
+    {
+      "id": "INV-2004",
+      "invoiceDate": "2026-06-30",
+      "invoiceNo": "INV-2606-01",
+      "customerId": "CUST-003",
+      "itemTitle": "業務システム改修 フェーズ1検収",
+      "net10": 800000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 600000,
+      "paidDate": "2026-07-31",
+      "note": "一部入金・残額繰越中",
+      "items": [
+        { "name": "業務システム開発・改修作業（標準10%）", "taxRate": 10, "qty": 8, "unit": "人日", "unitPrice": 100000 }
+      ]
+    },
+    {
+      "id": "INV-2005",
+      "invoiceDate": "2026-09-30",
+      "invoiceNo": "INV-2609-01",
+      "customerId": "CUST-002",
+      "itemTitle": "軽減対象 業務用オーガニック食材卸（軽減8%） ほか1件",
+      "net10": 40000,
+      "net8": 250000,
+      "exempt0": 0,
+      "paidAmount": 314000,
+      "paidDate": "2026-10-30",
+      "note": "10%配送費・8%飲食料品",
+      "items": [
+        { "name": "軽減対象 業務用オーガニック食材卸（軽減8%）", "taxRate": 8, "qty": 50, "unit": "kg", "unitPrice": 5000 },
+        { "name": "配送・梱包資材費（標準10%）", "taxRate": 10, "qty": 4, "unit": "式", "unitPrice": 10000 }
+      ]
+    },
+    {
+      "id": "INV-2006",
+      "invoiceDate": "2026-10-31",
+      "invoiceNo": "INV-2610-01",
+      "customerId": "CUST-004",
+      "itemTitle": "Webサイトリニューアル制作 ほか1件",
+      "net10": 450000,
+      "net8": 0,
+      "exempt0": 10000,
+      "paidAmount": 0,
+      "paidDate": "",
+      "note": "11月末入金予定（売掛残）",
+      "items": [
+        { "name": "Webサイトリニューアル制作一式", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 450000 },
+        { "name": "収入印紙・行政手数料立替（非課税/対象外）", "taxRate": 0, "qty": 1, "unit": "件", "unitPrice": 10000 }
+      ]
+    },
+    {
+      "id": "INV-2007A",
+      "invoiceDate": "2026-11-05",
+      "invoiceNo": "INV-2611-01",
+      "customerId": "CUST-001",
+      "itemTitle": "11月スポット Webセキュリティ脆弱性診断",
+      "net10": 130000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 275000,
+      "paidDate": "2026-11-05",
+      "note": "前回繰越分入金・当月1件目",
+      "items": [
+        { "name": "Webセキュリティ脆弱性診断スポット作業", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 130000 }
+      ]
+    },
+    {
+      "id": "INV-2007B",
+      "invoiceDate": "2026-11-28",
+      "invoiceNo": "INV-2611-02",
+      "customerId": "CUST-001",
+      "itemTitle": "11月度 クラウドシステム保守・ライセンス",
+      "net10": 250000,
+      "net8": 0,
+      "exempt0": 0,
+      "paidAmount": 0,
+      "paidDate": "",
+      "note": "当月2件目（月末定期請求）",
+      "items": [
+        { "name": "クラウドシステム保守・ライセンス（標準10%）", "taxRate": 10, "qty": 1, "unit": "式", "unitPrice": 250000 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>売上・入金・売掛管理＆インボイス請求書発行シート（GitHub共有対応）</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header no-print">
+    <div class="header-left">
+      <div class="logo-badge">📊</div>
+      <div>
+        <h1>売上・入金・繰越管理 ＆ 請求書発行シート</h1>
+        <p class="subtitle">GitHubプライベート共有対応 / 同月×同一顧客の自動合算 / 品目マスタ（10%・8%軽減）連動</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <!-- GitHub クラウド同期コントロール -->
+      <div class="github-sync-bar" id="githubSyncBar">
+        <span class="gh-status-dot" id="ghStatusDot" title="GitHub未設定（クリックして設定）"></span>
+        <button id="btnGithubPull" class="btn btn-gh" title="GitHubリポジトリ(data.json)から最新の売上データを読み込みます">
+          ☁ 最新を取得 (Pull)
+        </button>
+        <button id="btnGithubPush" class="btn btn-gh btn-gh-push" title="現在の売上データをGitHubリポジトリ(data.json)へ保存し、社員・税理士へ共有します">
+          ⬆ GitHubへ保存 (Push)
+        </button>
+        <button id="btnGithubSettings" class="btn btn-gh-icon" title="GitHubリポジトリ共有設定（トークン・リポジトリ名・自動同期）">
+          ⚙ 共有設定
+        </button>
+      </div>
+
+      <div class="fiscal-group">
+        <label for="fiscalEndMonth">決算月（期末）:</label>
+        <select id="fiscalEndMonth" title="会社の決算月を選択すると会計年度が自動再計算されます">
+          <option value="1">1月決算</option>
+          <option value="2">2月決算</option>
+          <option value="3" selected>3月決算（4月〜翌3月）</option>
+          <option value="4">4月決算</option>
+          <option value="5">5月決算</option>
+          <option value="6">6月決算</option>
+          <option value="7">7月決算</option>
+          <option value="8">8月決算</option>
+          <option value="9">9月決算</option>
+          <option value="10">10月決算</option>
+          <option value="11">11月決算</option>
+          <option value="12">12月決算（1月〜12月）</option>
+        </select>
+      </div>
+
+      <div class="fiscal-group">
+        <label for="fiscalYearSelect">対象会計年度:</label>
+        <select id="fiscalYearSelect"></select>
+      </div>
+
+      <div class="fiscal-group">
+        <label for="monthFilterSelect">対象月:</label>
+        <select id="monthFilterSelect">
+          <option value="ALL">通期（全12ヶ月）</option>
+        </select>
+      </div>
+
+      <div class="action-buttons">
+        <button id="btnCopyTsv" class="btn btn-primary" title="現在表示中の表をGoogleスプレッドシートやExcelにそのまま貼り付けられる形式でコピーします">
+          📋 スプレッドシート貼付コピー
+        </button>
+        <button id="btnExportCsv" class="btn btn-outline" title="税理士提出用・Excel用のCSVファイルをダウンロードします">
+          ⬇ CSV出力
+        </button>
+        <div class="dropdown">
+          <button id="btnDataMenu" class="btn btn-secondary">📁 データ ▾</button>
+          <div id="dataMenuDropdown" class="dropdown-menu hidden">
+            <button id="btnExportJson" class="dropdown-item">💾 ローカルへ保存 (data.json)</button>
+            <label for="fileImportJson" class="dropdown-item file-label">📂 ファイル読込 (JSON)</label>
+            <input type="file" id="fileImportJson" accept=".json" class="hidden" />
+            <hr />
+            <button id="btnLoadRepoDataJson" class="dropdown-item">🔄 同フォルダの data.json を読込</button>
+            <button id="btnLoadSample" class="dropdown-item">🧪 サンプルデータを再読込</button>
+            <button id="btnClearAll" class="dropdown-item text-danger">🗑 全請求データをクリア</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI サマリーバー -->
+  <section class="summary-bar no-print" id="summaryBar">
+    <div class="summary-card">
+      <div class="summary-label">期首（前月）繰越残高</div>
+      <div class="summary-value" id="kpiCarryIn">¥0</div>
+      <div class="summary-sub" id="kpiCarryInSub">対象期間前の未回収累計</div>
+    </div>
+    <div class="summary-card highlight-blue">
+      <div class="summary-label">期間 売上合計（税込）</div>
+      <div class="summary-value" id="kpiTotalGross">¥0</div>
+      <div class="summary-sub" id="kpiTotalTaxSub">税抜: ¥0 / 消費税: ¥0</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">消費税内訳（10%標準 / 8%軽減）</div>
+      <div class="summary-value summary-tax-split" id="kpiTaxSplit">10%: ¥0 / 8%: ¥0</div>
+      <div class="summary-sub" id="kpiTaxNetSplit">10%対象税抜: ¥0 / 8%対象税抜: ¥0</div>
+    </div>
+    <div class="summary-card highlight-green">
+      <div class="summary-label">期間 入金合計</div>
+      <div class="summary-value" id="kpiTotalPaid">¥0</div>
+      <div class="summary-sub" id="kpiPaidRateSub">回収率: 0.0%</div>
+    </div>
+    <div class="summary-card highlight-amber">
+      <div class="summary-label">期末（次月）繰越残高（売掛残）</div>
+      <div class="summary-value" id="kpiCarryOut">¥0</div>
+      <div class="summary-sub">繰越 ＋ 売上税込 − 入金</div>
+    </div>
+  </section>
+
+  <!-- ビュー切替タブ＆フィルタバー -->
+  <nav class="workspace-toolbar no-print">
+    <div class="view-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="ledger">
+        📝 1. 請求・売上・入金シート（元帳）
+      </button>
+      <button class="tab-btn" data-tab="matrix">
+        📅 2. 顧客別 × 月次・繰越マトリクス
+      </button>
+      <button class="tab-btn" data-tab="period">
+        📊 3. 同月×顧客集計・月次・期末集計表
+      </button>
+      <button class="tab-btn" data-tab="products">
+        📦 4. 品目マスタ（10% / 8%軽減の元情報）
+      </button>
+      <button class="tab-btn" data-tab="customers">
+        📇 5. 顧客マスタ ＆ 自社インボイス設定
+      </button>
+    </div>
+
+    <div class="toolbar-filters" id="ledgerToolbarFilters">
+      <select id="customerFilterSelect" title="特定の顧客だけに絞り込んでセル入力・繰越確認ができます">
+        <option value="ALL">すべての顧客を表示</option>
+      </select>
+      <select id="statusFilterSelect" title="入金ステータスで絞り込み">
+        <option value="ALL">すべてのステータス</option>
+        <option value="UNPAID">未入金・一部入金（残高あり）</option>
+        <option value="PAID">入金済（残高0）</option>
+        <option value="OVERPAID">過入金・繰越消込</option>
+      </select>
+      <input type="search" id="searchInput" placeholder="請求番号・品目・備考で検索..." />
+    </div>
+  </nav>
+
+  <!-- メインワークスペース -->
+  <main class="workspace-main no-print">
+    <!-- TAB 1: 請求・売上・入金セル入力シート -->
+    <section id="tab-ledger" class="tab-panel active">
+      <div class="sheet-action-bar">
+        <div class="sheet-action-left">
+          <button id="btnAddRow" class="btn btn-add-row">＋ 新規請求行を追加 (Enter)</button>
+          <button id="btnMergeSelected" class="btn btn-sm btn-merge" title="チェックした同月・同一顧客の複数行を1枚の請求書データに統合します">🔗 選択行を1枚の請求書に合算統合</button>
+          <button id="btnDuplicateRow" class="btn btn-sm">📄 選択行を複製</button>
+          <button id="btnDeleteSelected" class="btn btn-sm btn-danger-outline">🗑 選択行を削除</button>
+        </div>
+        <div class="sheet-action-right" style="display: flex; gap: 10px; align-items: center;">
+          <label class="toggle-label" style="background: #eff6ff; border-color: #93c5fd; color: #1e3a8a;">
+            <input type="checkbox" id="chkGroupSameMonthCustomer" checked />
+            <span>📑 同月 × 同一顧客の集計行（月まとめ請求書出力）を表示</span>
+          </label>
+          <label class="toggle-label">
+            <input type="checkbox" id="chkInputModeGross" />
+            <span>金額セルを「税込入力」から逆算</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 品目サジェスト用datalist -->
+      <datalist id="productSuggestions"></datalist>
+
+      <div class="sheet-container">
+        <table class="spreadsheet-table" id="ledgerTable">
+          <thead>
+            <tr>
+              <th class="col-check"><input type="checkbox" id="chkSelectAll" title="全選択" /></th>
+              <th class="col-rownum">#</th>
+              <th class="col-date">請求/売上日<span class="req">*</span></th>
+              <th class="col-invno">請求書番号</th>
+              <th class="col-cust">顧客名（取引先）<span class="req">*</span></th>
+              <th class="col-item">品目・案件摘要（マスタ選択可）</th>
+              <th class="col-num" id="thAmount10">10%対象(税抜)</th>
+              <th class="col-num calc-col">10%消費税</th>
+              <th class="col-num" id="thAmount8">8%軽減(税抜)</th>
+              <th class="col-num calc-col">8%消費税</th>
+              <th class="col-num" id="thAmount0">非課税/対象外</th>
+              <th class="col-num calc-col total-col">請求税込合計</th>
+              <th class="col-num paid-col">入金金額(セル入力)</th>
+              <th class="col-date">入金日</th>
+              <th class="col-status calc-col">ステータス</th>
+              <th class="col-num calc-col balance-col">単票未収残高</th>
+              <th class="col-num calc-col carry-col" title="期首繰越＋これまでの請求累計−入金累計">顧客別 累計繰越残高</th>
+              <th class="col-note">備考</th>
+              <th class="col-act-wide">明細 / 入金 / 請求書出力</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerTbody"></tbody>
+          <tfoot id="ledgerTfoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: 顧客別 × 月次・繰越マトリクス集計 -->
+    <section id="tab-matrix" class="tab-panel">
+      <div class="sheet-action-bar">
+        <div class="sheet-action-left">
+          <div class="segmented-control" id="matrixMetricSelect">
+            <button class="seg-btn active" data-metric="all_ledger">📊 売上・入金・繰越残高（3段表示）</button>
+            <button class="seg-btn" data-metric="carry_balance">💰 月末繰越残高（売掛残高）の推移</button>
+            <button class="seg-btn" data-metric="sales_gross">📈 売上高（税込）の推移</button>
+            <button class="seg-btn" data-metric="sales_net">📘 売上高（税抜）の推移</button>
+            <button class="seg-btn" data-metric="paid">🏦 入金済額の推移</button>
+          </div>
+          <span class="hint-text">💡 セルをクリックすると、その「顧客 × 月」の入力シートへジャンプします。</span>
+        </div>
+      </div>
+
+      <div class="sheet-container">
+        <table class="spreadsheet-table matrix-table" id="matrixTable">
+          <thead id="matrixThead"></thead>
+          <tbody id="matrixTbody"></tbody>
+          <tfoot id="matrixTfoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: 同月×顧客集計・月次・期末（会計年度）税率別集計表 -->
+    <section id="tab-period" class="tab-panel">
+      <div class="sheet-action-bar">
+        <div class="sheet-action-left">
+          <div class="segmented-control" id="periodGroupSelect">
+            <button class="seg-btn active" data-group="monthly_customer">📑 同月 × 同一顧客の月次締め集計（合算請求書出力）</button>
+            <button class="seg-btn" data-group="monthly">📅 選択年度の月次推移（期首〜期末）</button>
+            <button class="seg-btn" data-group="yearly">🏢 会計年度別（期末単位）の年次比較</button>
+            <button class="seg-btn" data-group="customer_annual">🤝 選択年度の顧客別・税率別・繰越集計表（税理士提出用）</button>
+          </div>
+          <span class="hint-text">💡 「同月 × 同一顧客の月次締め集計」では、同じ月に複数回発生した売上を顧客別に自動合算し、1枚の月まとめ請求書を発行できます。</span>
+        </div>
+      </div>
+
+      <div class="sheet-container">
+        <table class="spreadsheet-table" id="periodTable">
+          <thead id="periodThead"></thead>
+          <tbody id="periodTbody"></tbody>
+          <tfoot id="periodTfoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: 品目マスタ（10%標準・8%軽減・非課税の元データ管理） -->
+    <section id="tab-products" class="tab-panel">
+      <div class="sheet-action-bar">
+        <div class="sheet-action-left">
+          <button id="btnAddProduct" class="btn btn-add-row">＋ 新規品目・サービスを追加</button>
+          <span class="hint-text">
+            💡 <strong>ここが「10% / 8%軽減税率 / 非課税」の品目の元データ（品目マスタ）です。</strong> ここで税率区分と標準単価を設定しておくと、請求書や元帳で品目を選んだ際に自動で10%・8%へ振り分けられます。
+          </span>
+        </div>
+      </div>
+
+      <div class="sheet-container">
+        <table class="spreadsheet-table" id="productTable" style="min-width: 1050px;">
+          <thead>
+            <tr>
+              <th class="col-rownum">#</th>
+              <th class="col-code">品目コード</th>
+              <th style="width: 260px;">品目・サービス名<span class="req">*</span></th>
+              <th style="width: 170px;">消費税区分（10% / 8%軽減 / 非課税）<span class="req">*</span></th>
+              <th style="width: 130px;">標準単価（税抜）</th>
+              <th style="width: 90px;">単位</th>
+              <th style="width: 240px;">備考（軽減税率の該当理由など）</th>
+              <th class="col-act">操作</th>
+            </tr>
+          </thead>
+          <tbody id="productTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 5: 顧客マスタ ＆ 自社情報（インボイス発行者情報）設定 -->
+    <section id="tab-customers" class="tab-panel">
+      <div class="issuer-settings-box">
+        <div class="issuer-box-header">
+          <h3>🏢 自社情報設定（請求書の発行元・インボイス登録番号・振込先）</h3>
+          <span class="hint-text">※請求書を発行する際は「自社のインボイス登録番号」が必要です（顧客側のインボイス番号は無くても全く問題ありません）。</span>
+        </div>
+        <div class="issuer-grid">
+          <div class="issuer-field">
+            <label>自社名（屋号・法人名）</label>
+            <input type="text" id="issuerName" placeholder="株式会社サンプルクリエイト" />
+          </div>
+          <div class="issuer-field">
+            <label>自社インボイス登録番号 (T+13桁)</label>
+            <input type="text" id="issuerRegNo" placeholder="T9010001099999" />
+          </div>
+          <div class="issuer-field">
+            <label>郵便番号・住所</label>
+            <input type="text" id="issuerAddress" placeholder="〒100-0001 東京都千代田区..." />
+          </div>
+          <div class="issuer-field">
+            <label>電話番号 / メール</label>
+            <input type="text" id="issuerContact" placeholder="TEL: 03-0000-0000 / accounting@example.com" />
+          </div>
+          <div class="issuer-field">
+            <label>お振込先口座</label>
+            <input type="text" id="issuerBank" placeholder="〇〇銀行 △△支店 普通 1234567 カ）サンプルクリエイト" />
+          </div>
+          <div class="issuer-field">
+            <label>お支払期限・請求書備考テンプレ</label>
+            <input type="text" id="issuerNote" placeholder="お振込手数料は貴社にてご負担をお願いいたします。" />
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-action-bar">
+        <div class="sheet-action-left">
+          <button id="btnAddCustomer" class="btn btn-add-row">＋ 新規顧客（取引先）を追加</button>
+          <span class="hint-text">💡 顧客のインボイス番号は<strong>空欄（未登録）でもすべての集計・請求書発行が正常に機能します</strong>。</span>
+        </div>
+      </div>
+
+      <div class="sheet-container">
+        <table class="spreadsheet-table" id="customerTable">
+          <thead>
+            <tr>
+              <th class="col-rownum">#</th>
+              <th class="col-code">顧客コード</th>
+              <th class="col-cust">顧客名（取引先名）<span class="req">*</span></th>
+              <th style="width: 190px;">請求書宛先 住所・部署名（任意）</th>
+              <th class="col-num">初期繰越残高（期首売掛残）</th>
+              <th class="col-text">締日・支払条件</th>
+              <th class="col-invreg">先方インボイス番号（任意/空欄可）</th>
+              <th class="col-num calc-col">全期間 請求累計(税込)</th>
+              <th class="col-num calc-col">全期間 入金累計</th>
+              <th class="col-num calc-col carry-col">現在 累計繰越残高</th>
+              <th class="col-act">操作</th>
+            </tr>
+          </thead>
+          <tbody id="customerTbody"></tbody>
+          <tfoot id="customerTfoot"></tfoot>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- モーダル1: 請求書の品目明細（10% / 8% 内訳）エディタ -->
+  <div id="itemsModal" class="modal-backdrop hidden no-print">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <h2 id="itemsModalTitle">📋 請求明細（品目・10% / 8%軽減税率 内訳）の編集</h2>
+          <p class="modal-sub">品目マスタから選択するか直接入力すると、10%対象・8%軽減対象・非課税ごとに自動集計されて元帳シートと請求書に反映されます。</p>
+        </div>
+        <button id="btnCloseItemsModal" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <table class="spreadsheet-table" style="min-width: 100%;">
+          <thead>
+            <tr>
+              <th style="width: 36px;">#</th>
+              <th style="width: 190px;">品目マスタから引用</th>
+              <th>品目・摘要名（請求書に印字されます）</th>
+              <th style="width: 120px;">税率区分</th>
+              <th style="width: 80px;">数量</th>
+              <th style="width: 70px;">単位</th>
+              <th style="width: 115px;">単価(税抜)</th>
+              <th style="width: 120px;" class="calc-col">金額(税抜)</th>
+              <th style="width: 50px;">削除</th>
+            </tr>
+          </thead>
+          <tbody id="lineItemsTbody"></tbody>
+        </table>
+        <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <button id="btnAddLineItem" class="btn btn-add-row">＋ 明細行を追加</button>
+          <div id="lineItemsSummaryText" style="font-family: var(--font-mono); font-weight: 700; font-size: 13px;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnOpenInvoiceFromItems" class="btn btn-outline">🖨 この内容で請求書プレビューを開く</button>
+        <button id="btnSaveItemsModal" class="btn btn-primary">✓ 元帳シートに反映して閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル2: 適格請求書（インボイス）プレビュー ＆ 印刷・PDF出力 -->
+  <div id="invoicePreviewModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-invoice">
+      <div class="modal-header no-print">
+        <div>
+          <h2 id="invoicePreviewModalTitle">🖨 適格請求書（インボイス対応）プレビュー・印刷・PDF出力</h2>
+          <p class="modal-sub">「印刷 / PDF保存」ボタンを押すと、A4サイズ1枚に綺麗に収まるレイアウトで出力されます。</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <label class="toggle-label" style="background: #fff;">
+            <input type="checkbox" id="chkShowCarryOnInvoice" checked />
+            <span>前回繰越・入金額欄を印字する</span>
+          </label>
+          <button id="btnEditItemsFromPreview" class="btn btn-sm">📋 品目内訳を編集</button>
+          <button id="btnPrintInvoice" class="btn btn-primary">🖨 印刷 / PDFとして保存</button>
+          <button id="btnClosePreviewModal" class="btn-close">✕</button>
+        </div>
+      </div>
+      <div class="modal-body invoice-preview-scroll">
+        <!-- 印刷対象シート (A4) -->
+        <div id="invoicePrintSheet" class="invoice-paper"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル3: GitHub プライベートリポジトリ共有・同期設定 -->
+  <div id="githubModal" class="modal-backdrop hidden no-print">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h2>☁ GitHub プライベート共有・データ同期設定</h2>
+          <p class="modal-sub">GitHubプライベートリポジトリ上の <code>data.json</code> をデータベースとして、社員や税理士さんとブラウザ経由で安全にデータ共有・更新できます。</p>
+        </div>
+        <button id="btnCloseGithubModal" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="gh-form-grid">
+          <div class="issuer-field">
+            <label>GitHub オーナー名 (ユーザー名 または Organization名) <span class="req">*</span></label>
+            <input type="text" id="ghOwner" placeholder="例: tadaaki-hub" />
+          </div>
+          <div class="issuer-field">
+            <label>リポジトリ名 (Private推奨) <span class="req">*</span></label>
+            <input type="text" id="ghRepo" placeholder="例: sales-ledger-sheet" />
+          </div>
+          <div class="issuer-field">
+            <label>ブランチ名</label>
+            <input type="text" id="ghBranch" placeholder="main" value="main" />
+          </div>
+          <div class="issuer-field">
+            <label>データファイルパス</label>
+            <input type="text" id="ghPath" placeholder="data.json" value="data.json" />
+          </div>
+        </div>
+
+        <div class="issuer-field">
+          <label>GitHub Personal Access Token (Fine-grained PAT / <code>Contents: Read & Write</code> 権限)</label>
+          <input type="password" id="ghToken" placeholder="github_pat_... または ghp_..." />
+          <span class="hint-text" style="margin-left:0; margin-top:4px;">
+            🔒 トークンはお使いのブラウザのローカル領域（localStorage）にのみ保存され、GitHub公式API（<code>api.github.com</code>）との通信にのみ使用されます。リポジトリ内のコードには一切書き込まれません。<br />
+            ※ <strong>税理士さんなど「閲覧のみ」の方</strong>は、Read-only（読み取り専用）トークンを発行するか、リポジトリのCollaboratorに招待してください。
+          </span>
+        </div>
+
+        <div class="issuer-field" style="flex-direction: row; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          <input type="checkbox" id="ghAutoPullOnLoad" checked />
+          <label for="ghAutoPullOnLoad" style="font-size: 12px; color: #0f172a; cursor: pointer;">
+            アプリを開いたときに自動で GitHub から最新データ（<code>data.json</code>）を取得する
+          </label>
+        </div>
+
+        <div id="ghSyncStatusBox" class="gh-status-box">
+          ステータス: 未接続（オーナー名・リポジトリ名・トークンを入力して「接続テスト＆保存」を押してください）
+        </div>
+
+        <details class="gh-guide-details">
+          <summary>📖 社員・税理士さんとGitHubで共有する手順（クリックで開く）</summary>
+          <div class="gh-guide-content">
+            <ol>
+              <li><strong>プライベートリポジトリの作成</strong>：GitHubで非公開（Private）リポジトリ <code>sales-ledger-sheet</code> を作成し、このフォルダ一式をPushします。</li>
+              <li><strong>共有メンバーの招待</strong>：リポジトリの <code>Settings</code> &gt; <code>Collaborators</code> から、共有したい社員や税理士さんのGitHubアカウントを招待します。</li>
+              <li><strong>アクセストークン(PAT)の発行</strong>：GitHub右上のアイコン &gt; <code>Settings</code> &gt; <code>Developer settings</code> &gt; <code>Personal access tokens</code> &gt; <code>Fine-grained tokens</code> から、対象リポジトリの <strong>Contents (Read and write)</strong> 権限を付与したトークンを発行し、上の欄に貼り付けます。</li>
+              <li><strong>日常の運用</strong>：画面上部の「<strong>☁ 最新を取得 (Pull)</strong>」で最新データを読み込み、売上や入金を入力したら「<strong>⬆ GitHubへ保存 (Push)</strong>」を押すだけで全員に即時共有されます（変更履歴もGitHub上にすべて残ります）。</li>
+            </ol>
+          </div>
+        </details>
+      </div>
+      <div class="modal-footer">
+        <button id="btnTestGithubConn" class="btn btn-outline">🔌 接続テスト</button>
+        <button id="btnSaveGithubConfig" class="btn btn-primary">✓ 設定を保存して閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="toast hidden no-print"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
