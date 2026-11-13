@@ -376,6 +376,19 @@ function loadGithubConfig() {
         ghConfig = { ...ghConfig, ...parsed };
       }
     }
+    // URLハッシュ (#token=gho_...) で渡された場合は自動登録してURLから消去（ワンクリック初期設定用）
+    if (location.hash && location.hash.includes("token=")) {
+      const params = new URLSearchParams(location.hash.slice(1));
+      const hashToken = params.get("token");
+      if (hashToken) {
+        ghConfig.token = hashToken.trim();
+        localStorage.setItem(GITHUB_CONFIG_KEY, JSON.stringify(ghConfig));
+        history.replaceState(null, "", location.pathname + location.search);
+        setTimeout(() => {
+          showToast("✅ GitHub自動接続が完了しました！「⬆ GitHubへ保存 (Push)」がそのまま使えます。");
+        }, 400);
+      }
+    }
     // もしGitHub Pages (*.github.io) 上で開かれている場合、URLからownerとrepoを自動推定
     if (location.hostname.endsWith(".github.io")) {
       const autoOwner = location.hostname.replace(".github.io", "");
