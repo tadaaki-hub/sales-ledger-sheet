@@ -7,7 +7,7 @@
  * - 任意の決算月（期末単位）・月次・顧客別繰越集計＆スプレッドシート/CSV出力
  */
 
-const STORAGE_KEY = "SALES_LEDGER_SHEET_V3";
+const STORAGE_KEY = "SALES_LEDGER_SHEET_V4_CLEAN";
 const GITHUB_CONFIG_KEY = "SALES_LEDGER_GITHUB_CONFIG_V1";
 
 // GitHub同期設定（トークン等はブラウザのlocalStorageにのみ保持し、data.jsonには含めない）
@@ -40,12 +40,12 @@ let state = {
     showCarryOnInvoice: true
   },
   issuer: {
-    name: "株式会社サンプルクリエイト",
-    regNo: "T9010001099999",
-    address: "〒100-0001 東京都千代田区千代田1-1-1 サンプルビル5F",
-    contact: "TEL: 03-1234-5678 / Mail: billing@sample-create.co.jp",
-    bank: "みずほ銀行 東京営業部 普通 1234567 カ）サンプルクリエイト",
-    note: "恐れ入りますが、お振込手数料は貴社にてご負担くださいますようお願い申し上げます。"
+    name: "",
+    regNo: "",
+    address: "",
+    contact: "",
+    bank: "",
+    note: ""
   },
   products: [],
   customers: [],
@@ -450,10 +450,9 @@ function loadState() {
   } catch (e) {
     console.error("Failed to load state:", e);
   }
-  const sample = getInitialSampleData();
-  state.products = sample.products;
-  state.customers = sample.customers;
-  state.invoices = sample.invoices;
+  state.products = [];
+  state.customers = [];
+  state.invoices = [];
   saveState(false);
 }
 
@@ -2364,6 +2363,18 @@ function showToast(msg) {
 }
 
 function addNewInvoiceRow() {
+  if (state.customers.length === 0) {
+    state.customers.push({
+      id: `CUST-${Date.now()}`,
+      code: "C001",
+      name: "新規取引先",
+      address: "",
+      invoiceRegNo: "",
+      openingBalance: 0,
+      paymentTerms: "月末締・翌月末払",
+      note: ""
+    });
+  }
   const defaultCust =
     state.settings.customerFilter !== "ALL"
       ? state.settings.customerFilter
@@ -3197,9 +3208,11 @@ function setupEventListeners() {
 
   document.getElementById("btnClearAll").addEventListener("click", () => {
     state.invoices = [];
+    state.customers = [];
+    state.products = [];
     saveState();
     renderAll();
-    showToast("請求データをすべてクリアしました。");
+    showToast("すべてのデータ（請求・顧客・品目）を空にリセットしました。「⬆ GitHubへ保存 (Push)」を押すとGitHub上も空になります。");
   });
 
   // 同フォルダの data.json を読込ボタン
